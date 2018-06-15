@@ -1,0 +1,5 @@
+numpy==1.11.0
+pandas==0.20.3
+elasticsearch==2.3.0
+requests==2.18.4
+joblib==0.11
