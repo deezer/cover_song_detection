@@ -10,11 +10,11 @@ R&D Intern
 import logging
 import time
 import json
+import csv
 
 
 def log(log_file):
     """Returns a logger object with predefined settings"""
-    # LOG_FILE = './logs/MAIN_LOG.log'
     root_logger = logging.getLogger(__name__)
     root_logger.setLevel(logging.DEBUG)
     file_handler = logging.FileHandler(log_file)
@@ -43,17 +43,6 @@ def timeit(method):
     return timed
 
 
-def checkTimeOutException(query_func):
-    done = False
-    while not done:
-      try:
-        query_func()
-        done = True
-      except TimeoutError:
-        pass
-    return
-    
-
 def slice_results(results_json, size):
     """Slice the query response results to a specified size"""
     with open(results_json) as f:
@@ -70,7 +59,7 @@ def slice_results(results_json, size):
     return sliced_dict
 
 
-# some utits for accessing msd_metadata sql db
+# some utils for accessing msd_metadata sql db
 def init_connection(db_file):
     """Loads a sqldb file and returns the connection object"""
     try:
@@ -105,24 +94,3 @@ def get_msd_field_metadata_from_ids(db_file, track_ids, field_name='track_name')
     query = con.execute("""SELECT %s from songs WHERE track_id IN (%s)""" %(field_name, msd_ids))
     results = query.fetchall()
     return [field[0] for field in results]
-
-
-def plot_kde_precision_scores(title_prec, lyrics_prec, rerank_prec):
-    import seaborn as sns
-    sns.set(color_codes=True)
-    sns.kdeplot(title_prec, label="title", shade=True)
-    sns.kdeplot(lyrics_prec, label="lyrics", shade=True)
-    sns.kdeplot(rerank_prec, label="title+lyrics_rerank", shade=True)
-    sns.utils.plt.show()
-    return
-
-
-def get_nums_with_less(results_df, size=100):
-    """Get results row in the datacframe with less than the size values"""
-    nlist = list()
-    ids = list()
-    for items, res in results_df.iterrows():
-        if len(res['id']) < size:
-            nlist.append(len(res['id']))
-            ids.append(items)
-    return nlist, ids

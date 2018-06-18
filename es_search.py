@@ -32,7 +32,7 @@ class SearchModule(object):
         self.config = uri_config
         self.handler = self.Elasticsearch(hosts=[{'host': self.config['host'],
                                                   'port': self.config['port'],
-                                                  'scheme': self.config['scheme']}], timeout=30)
+                                                  'scheme': self.config['scheme']}], timeout=timeout)
 
         if query_json:
             self.post_json = query_json
@@ -203,12 +203,6 @@ class SearchModule(object):
         field_info = self.parse_field_from_response(response.json(), field=field)
         return field_info
 
-    def get_lyrics_by_id(self, track_id):
-        """
-        Returns the lyrical content associated with a specific msd_track_id from the es db
-        """
-        return self.get_field_info_from_id(msd_id=track_id, field='dzr_lyrics')
-
     def get_mxm_lyrics_by_id(self, track_id):
         """
         Get Musixmatch lyrics associated with a msd track id from es index if there is any.
@@ -224,18 +218,6 @@ class SearchModule(object):
         # mar: the field "dzr_msd_title_clean" should not be a parameter (like in get_mxm_lyrics)
         response = get(self._format_url(msd_id))
         return self.parse_field_from_response(response.json(), field=field)
-
-    def get_dzr_roles_from_id(self, track_id, role_type='Composer'):
-        """
-        Get dzr_role data corresponds to a msd track from the ES index of there is any
-        """
-        # mar: I suggest to override self.handler.get to avoid passing the index as a parameter
-        roles = self.handler.get(index=self.config['index'], id=track_id, _source_include=['dzr_artists'])
-        if 'dzr_artists' in roles['_source'].keys():
-            roles = roles['_source']['dzr_artists']
-            return [role['artist_name'] for role in roles if role['role_name'] == role_type]
-
-        return None  # mar: should return an empty list here
 
     def search_es(self, body):
         """
@@ -284,41 +266,6 @@ class SearchModule(object):
 
         return None
 
-    def search_by_dzr_lyrics(self, post_json, track_id, out_mode='eval', size=100):
-        """
-        Search es_msd_augmented_db for similar lyrics to an input lyrics
-        based on the "more_like_this" document similarity method in elasticsearch
-
-        [NOTE]: It returns a tuple of list of response msd_track_ids and
-        response_scores from the elastic search response if the track has corresponding "dzr_lyrics"
-                otherwise return a tuple of (None, None)
-        Inputs :
-                post_json : (dict) post-json template for "more_like_this" es search
-                            use presets.more_like_this template
-
-                track_id : (string) msd track id
-
-            Params :
-                    out_mode : ['eval', 'view']
-                    size : size of the required response from es_db
-
-        """
-        lyrics = self.get_lyrics_by_id(track_id)
-
-        if not lyrics:
-            return None, None
-
-        self.format_lyrics_post_json(body=post_json, track_id=track_id, lyrics=lyrics, size=size)
-        res = self.search_es(body=self.post_json)
-
-        if out_mode == 'eval':
-            msd_ids, scores = self._parse_response_for_eval(res)
-            return msd_ids, scores
-
-        if out_mode == 'view':
-            return self._view_response(res)
-
-        return None
 
     def search_by_mxm_lyrics(self, post_json, msd_track_id, out_mode='eval', size=100):
         """
@@ -352,51 +299,5 @@ class SearchModule(object):
 
         if out_mode == 'view':
             return self._view_response(res)
-
-        return None
-
-    def search_with_roles(self, track_title, track_id, out_mode='view', shs_mode=False,
-                          filter_duplicates=False, size=100):
-        """
-        Search ES index with MSD song title and Composer credited artists
-        :param track_title:
-        :param track_id:
-        :param out_mode:
-        :param shs_mode:
-        :param filter_duplicates:
-        :param size:
-        :return:
-        """
-        roles = self.get_dzr_roles_from_id(track_id)
-
-        post_json = deepcopy(self.init_json)
-
-        post_json['query']['bool']['must'][0]['simple_query_string']['query'] = track_title
-        post_json['query']['bool']['must'][0]['simple_query_string']['fields'][0] = 'msd_title'
-        post_json['query']['bool']['must_not'][0]['query_string']['query'] = track_id 
-        post_json['size'] = size
-
-        if shs_mode:
-            post_json['query']['bool']['must'].append({'exists': {'field': 'shs_id'}})
-
-        if filter_duplicates:
-            post_json['query']['bool']['must_not'].append({'exists': {'field': 'msd_is_duplicate_of'}})
-
-        if roles:
-            post_dict = self.add_must_field_to_query_dsl(post_json, role_type='Composer', field='dzr_artists.role_name')
-            post_dict = self.add_role_artists_to_query_dsl(post_dict, roles, field='dzr_artists.artist_name')
-
-            res = self.search_es(post_dict)
-
-            if res:
-                if out_mode == 'eval':
-                    msd_ids, scores = self._parse_response_for_eval(res)
-                    return msd_ids, scores
-                if out_mode == 'view':
-                    return self._view_response(res)
-            else:
-                return None, None
-        else:
-            return None, None
 
         return None

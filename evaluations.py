@@ -174,7 +174,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", action="store", default=-1,
                         help="number of threads required")
     parser.add_argument("-e", action="store", default='msd',
-                        help="path to query_files for qmax")
+                        help="choose between 'msd' or 'shs' ")
     parser.add_argument("-d", action="store", default=0,
                         help="choose whether you want to exclude msd official duplicates song from the experiments")
     parser.add_argument("-s", action="store", default=100,

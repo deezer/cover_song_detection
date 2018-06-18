@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Methods for running various experiments on es msd db for the task of cover
-song detection using metadata and lyrics ingested in the ES index.
+song detection using metadata and lyrics ingested in the ES MSD index.
 
 ----------
 Albin Andrew Correya
@@ -11,13 +11,17 @@ R&D Intern
 
 from utils import log, timeit
 import templates as presets
+import sys
+import os
+
 # bad hack for avoiding encoding erros for the moment
 # to be removed soon
-import sys
-
 reload(sys)
 sys.setdefaultencoding("utf8")
 
+
+if not os.path.isdir('./logs/'):
+    os.makedirs('./logs/')
 LOGGER = log('./logs/experiments.log')
 
 
@@ -73,7 +77,6 @@ class Experiments(object):
             self.filter_duplicates = presets.shs_msd['filter_duplicates']
             self.dzr_map = presets.shs_msd['dzr_map']
             self.shs_mode = presets.shs_msd['shs_mode']
-
         return
 
     def _load_csv_as_df(self, csvfile):
@@ -206,7 +209,7 @@ class Experiments(object):
     """
     ------------------------------------------
     ------ AUTOMATED EXPERIMENTS -------------
-    These are methods for running automated search experiments on the es msd_augmented_db
+    These are methods for running automated search experiments on the ES MSD db
     """
 
     @timeit
@@ -304,41 +307,6 @@ class Experiments(object):
 
 
     @timeit
-    def run_dzr_lyrics_search_task(self, post_json=presets.more_like_this, size=100, verbose=True):
-        """
-        more-like document search of lyrics using es
-        Check documentation for details (https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-mlt-query.html)
-
-        :param post_json: query dsl for lyrics elastic search
-        :param size: size of the top-k reponse
-        :param verbose: Boolean
-        :return: A aggregrated response from ES
-        """
-
-        if self.shs_mode:
-            self.es.limit_post_json_to_shs()
-
-        if self.filter_duplicates:
-            self.es.add_remove_duplicates_filter()
-
-        if self.dzr_map:
-            self.es.limit_to_dzr_mapped_msd()
-
-        results = dict()
-
-        LOGGER.info("\n=======Running dzr lyrics search task for %s query songs against top %s "
-                    "results of MSD... with shs_mode %s, duplicate %s, dzr_map %s ========\n"
-                    % (len(self.query_ids), size, str(self.shs_mode), str(self.filter_duplicates), str(self.dzr_map)))
-
-        for ids in enumerate(self.query_ids):
-            if verbose:
-                print "------%s-------%s" % (ids[0], ids[1])
-            res_ids, res_scores = self.es.search_by_dzr_lyrics(
-                post_json=post_json, track_id=ids[1], out_mode='eval', size=size)
-            results[ids[1]] = {'id': res_ids, 'score': res_scores}
-        return self.pd.DataFrame.from_dict(results, orient='index')
-
-    @timeit
     def run_mxm_lyrics_search_task(self, post_json=presets.more_like_this, size=100, verbose=True):
         """
         Lyrics search method using MXM lyrics
@@ -414,6 +382,7 @@ class Experiments(object):
             results[self.query_ids[index]] = {'id': res_ids, 'score': res_scores}
         return self.pd.DataFrame.from_dict(results, orient='index')
 
+
     @timeit
     def run_rerank_title_with_mxm_lyrics_task(self, size=100, with_cleaned=False, verbose=True, threshold=0.5):
         """
@@ -468,115 +437,6 @@ class Experiments(object):
             results[self.query_ids[index]] = {'id': res_ids, 'score': res_scores}
         return self.pd.DataFrame.from_dict(results, orient='index')
 
-    @timeit
-    def run_text_credits_search_task(self, size=100, verbose=True):
-        """
-        """
-        results = dict()
-
-        LOGGER.info("\n== Running credit search online experiment with song_title for %s query songs against "
-                    "top %s results of MSD... with shs_mode %s, duplicate %s, dzr_map %s\n"
-                    % (len(self.query_ids), size, str(self.shs_mode), str(self.filter_duplicates), str(self.dzr_map)))
-
-        for index, title in enumerate(self.query_titles):
-
-            if verbose:
-                print "---%s---%s" % (index, self.query_ids[index])
-
-            res_ids, res_scores = self.es.search_with_roles(
-                track_title=title, track_id=self.query_ids[index], shs_mode=self.shs_mode,
-                filter_duplicates=self.filter_duplicates, out_mode='eval', size=size)
-
-            results[self.query_ids[index]] = {'id': res_ids, 'score': res_scores}
-
-        return self.pd.DataFrame.from_dict(results, orient='index')
-
-    @timeit
-    def run_rerank_credits_with_title_task(self, size=100, threshold=0.1, verbose=True):
-        results = dict()
-
-        LOGGER.info("\nRerank credist online task")
-
-        for index, title in enumerate(self.query_titles):
-
-            if verbose:
-                print "---%s---%s" % (index, self.query_ids[index])
-
-            self.es.post_json = presets.simple_query_string
-            title_df = self.es.search_by_exact_title(
-                track_title=title, track_id=self.query_ids[index], out_mode='view', size=size)
-            credits_df = self.es.search_with_roles(
-                title, self.query_ids[index], shs_mode=self.shs_mode, out_mode='view', size=size)
-
-            if type(credits_df) == tuple:
-                res_ids, res_scores = title_df.msd_id.values.tolist(), title_df.score.values.tolist()
-            else:
-                res_ids, res_scores = self.rerank_title_results_by_lyrics(title_df, credits_df,
-                                                                          mode='eval', proximity=threshold)
-
-            results[self.query_ids[index]] = {'id': res_ids, 'score': res_scores}
-
-        return self.pd.DataFrame.from_dict(results, orient='index')
-
-    @timeit
-    def run_credits_rerank_offline_task(self, text_results_json, role_type='Composer', threshold=0.5, verbose=True):
-        text_df = self.pd.read_json(text_results_json)
-        results = dict()
-        cnt = 0
-        # error_idxs = list()
-
-        LOGGER.info("Running dzr_song credits reranking task on the %s results "
-                    "file with role_type : %s and threshold : %s" % (text_results_json, role_type, threshold))
-
-        for idx in range(len(text_df)):
-
-            query_id = text_df.index[idx]
-            if verbose:
-                print "---%s---%s" % (idx, query_id)
-            top_rerank_idxs = list()
-            top_res_roles = list()
-
-            response_ids = text_df.iloc[idx].id
-            response_scores = text_df.iloc[idx].score
-
-            if not response_scores or not response_ids or len(response_ids) == 0:
-                results[query_id] = {'id': text_df.msd_id.values.tolist(), 'score': text_df.score.values.tolist()}
-                cnt += 1
-                # error_idxs.append(idx)
-            else:
-                t_ids, t_scores, thres_idx = self.get_score_thres(response_ids, response_scores, proximity=threshold)
-
-                role_artists = self.es.get_dzr_roles_from_id(track_id=query_id, role_type=role_type)
-
-                if role_artists:
-                    for index, ids in enumerate(response_ids[:thres_idx]):
-                        res_roles = self.es.get_dzr_roles_from_id(track_id=ids, role_type=role_type)
-                        # print "RES_ROLES : ",res_roles
-                        if res_roles:
-                            res_roles = [artist for artist in res_roles if artist in role_artists]
-                            top_res_roles.extend(res_roles)
-                            top_rerank_idxs.append(index)
-                        else:
-                            pass
-                    if top_rerank_idxs:
-                        top_ids = self.np.array(response_ids)[top_rerank_idxs]
-                        top_scores = list(self.np.array(response_scores)[top_rerank_idxs])
-                        bottom_ids = [ids for ids in response_ids if ids not in top_ids]
-                        bottom_idx = [response_ids.index(x) for x in bottom_ids]
-                        bottom_scores = self.np.array(response_scores)[bottom_idx]
-                        new_ranked_ids = list(top_ids) + bottom_ids
-                        new_ranked_scores = top_scores + list(bottom_scores)
-                        results[query_id] = {'id': new_ranked_ids, 'score': new_ranked_scores}
-                    else:
-                        results[query_id] = {'id': text_df.msd_id.values.tolist(),
-                                             'score': text_df.score.values.tolist()}
-
-                else:
-                    results[query_id] = {'id': text_df.msd_id.values.tolist(), 'score': text_df.score.values.tolist()}
-
-        LOGGER.debug("%s queries dont have proper dzr roles" % cnt)
-
-        return self.pd.DataFrame.from_dict(results, orient='index')
 
     @timeit
     def run_audio_rerank_task(self, text_results_json, audio_results_json, threshold=0.1):
@@ -663,7 +523,7 @@ class Experiments(object):
                     results[audio_df.index[idx]] = {'id': text_res_ids, 'score': text_res_scores}
 
         LOGGER.debug("%s queries dont have proper audio reranked resposne" % cnt)
-        # print error_idxs
+
         return self.pd.DataFrame.from_dict(results, orient='index')
 
     @timeit
@@ -671,7 +531,7 @@ class Experiments(object):
         """
         In this experiment we rerank the response ids with the ground_truth to compute
         the maximum achievable MAP by re-ranking the metadata-search results with
-        other content such as lyrics, audio etc.
+        other content such as lyrics, audio etc. This was only done on the train set of the dataset
         """
         LOGGER.info("Computing maximum achievable mean average precison from the results dataframe")
         results_df = self._merge_df(results_df)
@@ -756,7 +616,6 @@ class Experiments(object):
         """
         Mean of average precisions for the task
         """
-        # return self.np.mean(self.old_average_precision(results_df))
         return self.np.mean(self.average_precision(results_df, size=size))
 
     def average_rank(self, results_df):
