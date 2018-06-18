@@ -1,19 +1,12 @@
 """
 utility functions for processing resutls file for audio reranking experiments
 """
-from dzr_utils.interfaces.files import get_path_from_identifier
 from utils import timeit, log
 import pandas as pd
 import numpy as np
 import os
 
-# results_json_to_query_collection_pairs(
-# '../dzr_shs_test_audio_task_results/dzr_clean_title_lyrics_rerank_100.json',
-# '../dzr_shs_test_audio_task_results/enriched_dzr_path_csv.csv',
-# '../dzr_shs_test_audio_task_results/collection_txts/', '../dzr_shs_test_audio_task_results/query_txts/')
 
-# TO_REMOVE_IDS = list(np.load('../dzr_shs_test_audio_task_results/to_remove_ids.npy'))
-TO_REMOVE_IDS = list(np.load('./data/to_remove_ids.npy'))
 logger = log('./logs/audio_logs.log')
 
 
@@ -54,13 +47,6 @@ def parse_mirex_output_txt(textfile):
     return df.transpose()
 
 
-def get_dzr_sng_path_from_sng_id(dzr_sng_id):
-    try:
-        return get_path_from_identifier(dzr_sng_id)
-    except:
-        return None
-
-
 @timeit
 def results_json_to_enriched_results_df(results_json, dzr_msd_map_df):
     """
@@ -79,17 +65,6 @@ def results_json_to_enriched_results_df(results_json, dzr_msd_map_df):
     df_dzr['dzr_path'] = df_dzr.song_id.apply(get_dzr_sng_path_from_sng_id)
     return df_dzr
 
-
-def get_dzr_path_from_msd_id(msd_id, enriched_res_df):
-    return enriched_res_df.dzr_path[enriched_res_df.msd_track_id == msd_id].values[0]
-
-
-def get_dzr_path_from_msd_ids(msd_id_list):
-    return [get_dzr_path_from_msd_id(ids) for ids in msd_id_list]
-
-
-def remove_no_audio_items_from_list(mylist, to_remove=TO_REMOVE_IDS):
-    return [item for item in mylist if item not in to_remove]
 
 
 def results_json_to_query_collection_pairs(results_json, enriched_csv, col_path, query_path):
@@ -111,7 +86,6 @@ def results_json_to_query_collection_pairs(results_json, enriched_csv, col_path,
         rids = res.iloc[i].id
         if not rids:
             logger.debug("No response found for index %s" % i)
-        rids = remove_no_audio_items_from_list(rids)
         qpaths = map_data.dzr_path[map_data.msd_track_id == mid].values[0]
         rpaths = [map_data.dzr_path[map_data.msd_track_id == rid].values[0] for rid in rids]
         qpaths = qpaths.replace("data", "mnt")
@@ -142,12 +116,9 @@ def get_id_score_pairs_from_distance_df(distance_df, results_df, index):
         logger.debug("Mismatch of response msd id length in index %s" % index)
 
     # new reranked response ids and scores from the audio similarity measures
-    if index in [3039, 3221, 3722, 4160]:
-        res_ids, res_scores = (None, None)
-    else:
-        # note the index from the output_txt file starts with 1
-        res_ids = [res_msd_ids[int(i)-1] for i in new_ranked_idx]
-        res_scores = sorted_df[1].values.tolist()
+    # note the index from the output_txt file starts with 1
+    res_ids = [res_msd_ids[int(i)-1] for i in new_ranked_idx]
+    res_scores = sorted_df[1].values.tolist()
     return res_ids, res_scores
 
 

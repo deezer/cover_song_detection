@@ -6,7 +6,6 @@ Albin Andrew Correya
 R&D Intern
 @Deezer, 2018
 """
-# from fuzzywuzzy.fuzz import partial_ratio
 from itertools import combinations
 from Levenshtein import ratio
 import numpy as np
@@ -17,25 +16,14 @@ import random
 def get_clique_similarity_same_set(dataset_csv):
     """Compute Levenshtein similarity of song titles in same cliques in SHS"""
     dataset = pd.read_csv(dataset_csv)
-
     clique_ids = dataset.work_id.unique().tolist()
-
     clique_sims = list()
-
     for work_id in clique_ids:
         song_titles = dataset.title[dataset.work_id == work_id].values.tolist()
-        # clique_size = len(song_titles)
-
-        # random_idx = random.choice(np.arange(len(song_titles)))
-        # ref_title = song_titles[random_idx]
-        # ref_title = song_titles[0]
         distances = list()
         for (title1, title2) in combinations(song_titles, 2):
-            # measure = partial_ratio(ref_title, title)/100.
             measure = ratio(title1, title2)
             distances.append(measure)
-
-        # clique_sims.append(sum(distances)/float(clique_size))
         clique_sims.append(np.mean(distances))
     return clique_sims
 

@@ -1,18 +1,23 @@
-# es_msd_modules
+# Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features
 
-Methods to interact with  ElasticSearch MSD augmented index
 
+Supplementary materials for the DLfM-2018 paper.
+
+This repo contains scripts to run text-based experiments for cover song detection task on the [MillionSongDataset (MSD)](https://labrosa.ee.columbia.edu/millionsong/)
+which is imported into an [Elasticsearch (ES)](https://www.elastic.co/blog/what-is-an-elasticsearch-index) index.
 # Requirements
 
-Install python dependencies from requirements.txt file
+Install python dependencies from the requirements.txt file
 
 ```
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 
 # Setup
 
-* Fill host, port and index information of the ES db in the [templates.py](templates.py) file
+* Use[ElasticMSD](https://github.com/deezer/elasticmsd)scripts to setup your local Elasticsearch index of MSD.
+* Fill your ES db credentials (host, port and index) as a environment variable in your local system. 
+Check [templates.py](templates.py)file.
 
 
 # Usage
@@ -73,7 +78,17 @@ The experiments are multi-threaded and able to run from terminal using command-l
 
 ```bash
 $ python evaluations.py -m test -t -1 -e msd -d 0 -s 100
+
+    -m : (type: string) Choose between "train" or "test" modes
+    -t : (type: int) No of threads
+    -e : (type: int) Choose between "msd"
+    -d : (type: boolean) include duplicates
+    -s : (type: int) Required pruning size for the experiments
+
 ```
+
+
+
 
 # Documentation
 
