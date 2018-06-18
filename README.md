@@ -1,10 +1,11 @@
 # Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features
 
 
-Supplementary materials for the DLfM-2018 paper.
+Source code and supplementary materials for the DLfM-2018 paper "Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features"
+by Albin Correya, Romain Hennequin and Mickaël Arcos, DLfM 2018, September, Paris, France
 
 This repo contains scripts to run text-based experiments for cover song detection task on the [MillionSongDataset (MSD)](https://labrosa.ee.columbia.edu/millionsong/)
-which is imported into an [Elasticsearch (ES)](https://www.elastic.co/blog/what-is-an-elasticsearch-index) index.
+which is imported into an [Elasticsearch (ES)](https://www.elastic.co/blog/what-is-an-elasticsearch-index) index as described in the above mentioned paper.
 # Requirements
 
 Install python dependencies from the requirements.txt file
@@ -15,7 +16,7 @@ $ pip install -r requirements.txt
 
 # Setup
 
-* Use[ElasticMSD](https://github.com/deezer/elasticmsd)scripts to setup your local Elasticsearch index of MSD.
+* Use [ElasticMSD] (https://github.com/deezer/elasticmsd) scripts to setup your local Elasticsearch index of MSD.
 * Fill your ES db credentials (host, port and index) as a environment variable in your local system. 
 Check [templates.py](templates.py)file.
 
@@ -48,6 +49,14 @@ results = exp.run_song_title_match_task(size=100)
 
 #compute evaluation metrics for the task
 mean_avg_precison = exp.mean_average_precision(results)
+
+#reset the preset if you want to do another experiment on the same same SearchModule instance.
+exp.reset_preset()
+
+results = exp.run_mxm_lyrics_search_task(size=1000)
+
+mean_avg_precison = exp.mean_average_precision(results)
+
 ```
 
 
@@ -125,4 +134,8 @@ Scripts for doing automated experiments for pre-defined evaluation methods
 
 ES [query-dsl](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) templates for doing various queries on the ES MSD augmented index.
 
+
+
+
+# References
 
