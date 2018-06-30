@@ -16,7 +16,7 @@ $ pip install -r requirements.txt
 
 # Setup
 
-* Use [ElasticMSD] (https://github.com/deezer/elasticmsd) scripts to setup your local Elasticsearch index of MSD.
+* Use [ElasticMSD](https://github.com/deezer/elasticmsd) scripts to setup your local Elasticsearch index of MSD.
 * Fill your ES db credentials (host, port and index) as a environment variable in your local system. 
 Check [templates.py](templates.py)file.
 
@@ -137,5 +137,10 @@ ES [query-dsl](https://www.elastic.co/guide/en/elasticsearch/reference/current/q
 
 
 
-# References
+# Cite
 
+If you use these work, please cite our paper.
+```
+Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features"
+by Albin Correya, Romain Hennequin and Mickaël Arcos, DLfM 2018, September, Paris, France
+```
