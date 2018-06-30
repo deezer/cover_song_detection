@@ -141,6 +141,5 @@ ES [query-dsl](https://www.elastic.co/guide/en/elasticsearch/reference/current/q
 
 If you use these work, please cite our paper.
 ```
-Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features"
-by Albin Correya, Romain Hennequin and Mickaël Arcos, DLfM 2018, September, Paris, France
+Correya, A, Hennequin, R and Arcos, M (2018), Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features, DLfM 2018, September, Paris, France
 ```
