@@ -18,8 +18,15 @@ $ pip install -r requirements.txt
 
 * Use [ElasticMSD](https://github.com/deezer/elasticmsd) scripts to setup your local Elasticsearch index of MSD.
 * Fill your ES db credentials (host, port and index) as a environment variable in your local system. 
-Check [templates.py](templates.py)file.
+Check [templates.py](templates.py) file.
 
+
+# Datasets
+
+The following datasets have corresponding mapping with MSD tracks. These data are ingested to the ES index in an update operation
+
+* [Second Hand Songs (SHS)](https://labrosa.ee.columbia.edu/millionsong/secondhand) dataset. Check the ./data folder
+* For lyrics we used the [musiXmatch (MXM)](https://labrosa.ee.columbia.edu/millionsong/musixmatch) dataset
 
 # Usage
 
@@ -141,5 +148,7 @@ ES [query-dsl](https://www.elastic.co/guide/en/elasticsearch/reference/current/q
 
 If you use these work, please cite our paper.
 ```
-Correya, A, Hennequin, R and Arcos, M (2018), Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features, DLfM 2018, September, Paris, France
+Correya, A, Hennequin, R and Arcos, M (2018), Large Scale Cover Detection in 
+Digital Music Libraries using Metadata, Lyrics and Audio Features, DLfM 2018, 
+September, Paris, France
 ```
