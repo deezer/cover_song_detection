@@ -1,8 +1,7 @@
 # Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features
 
 
-Source code and supplementary materials for the DLfM-2018 paper "Large Scale Cover Detection in Digital Music Libraries using Metadata, Lyrics and Audio Features"
-by Albin Correya, Romain Hennequin and Mickaël Arcos, DLfM 2018, September, Paris, France
+Source code and supplementary materials for the paper "Correya, Albin, Romain Hennequin, and Mickaël Arcos. "Large-Scale Cover Song Detection in Digital Music Libraries Using Metadata, Lyrics and Audio Features." arXiv preprint arXiv:1808.10351 (2018)".
 
 This repo contains scripts to run text-based experiments for cover song detection task on the [MillionSongDataset (MSD)](https://labrosa.ee.columbia.edu/millionsong/)
 which is imported into an [Elasticsearch (ES)](https://www.elastic.co/blog/what-is-an-elasticsearch-index) index as described in the above mentioned paper.
@@ -20,7 +19,6 @@ $ pip install -r requirements.txt
 * Fill your ES db credentials (host, port and index) as a environment variable in your local system. 
 Check [templates.py](templates.py) file.
 
-
 ## Datasets
 
 The following datasets have corresponding mapping with MSD tracks. These data are ingested to the ES index in an update operation
@@ -29,7 +27,6 @@ The following datasets have corresponding mapping with MSD tracks. These data ar
 * For lyrics we used the [musiXmatch (MXM)](https://labrosa.ee.columbia.edu/millionsong/musixmatch) dataset
 
 # Usage
-
 
 ## Modular mode
 
@@ -65,7 +62,6 @@ results = exp.run_mxm_lyrics_search_task(size=1000)
 mean_avg_precison = exp.mean_average_precision(results)
 
 ```
-
 
 ## Evaluation tasks
 
@@ -103,52 +99,20 @@ $ python evaluations.py -m test -t -1 -e msd -d 0 -s 100
 
 ```
 
-
-
-
-# Documentation
-
-### [SearchModule](es_search.py)
-
-Methods for doing various search queries on the ES MSD augmented    index for the cover detection task
-
-
-### [Experiments](experiments.py)
-
-Methods for doings pre-defined experiments for cover detection. A wrapper around es_search.py
-
-#### Tasks
-MSD song title
-
-Pre-processed MSD song title
-
-MXM lyrics
-
-MSD song title + MXM lyrics
-
-MSD song title + MXM lyrics + Offline Audio re-ranking
-
-
-#### Metrics
-
-Mean Average Precision
-
-### [Evaluation](evaluations.py)
-
-Scripts for doing automated experiments for pre-defined evaluation methods
-
-### [JSON Templates](templates.py)
-
-ES [query-dsl](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl.html) templates for doing various queries on the ES MSD augmented index.
-
-
-
-
 # Cite
 
 If you use these work, please cite our paper.
+
 ```
-Correya, A, Hennequin, R and Arcos, M (2018), Large Scale Cover Detection in 
-Digital Music Libraries using Metadata, Lyrics and Audio Features, DLfM 2018, 
-September, Paris, France
+Correya, Albin, Romain Hennequin, and Mickaël Arcos. "Large-Scale Cover Song Detection in Digital Music Libraries Using Metadata, Lyrics and Audio Features." arXiv preprint arXiv:1808.10351 (2018).
+```
+
+Bibtex format
+```
+@article{correya2018large,
+  title={Large-Scale Cover Song Detection in Digital Music Libraries Using Metadata, Lyrics and Audio Features},
+  author={Correya, Albin and Hennequin, Romain and Arcos, Micka{\"e}l},
+  journal={arXiv preprint arXiv:1808.10351},
+  year={2018}
+}
 ```
