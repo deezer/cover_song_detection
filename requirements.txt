@@ -1,7 +1,7 @@
 numpy==1.11.0
 pandas==0.20.3
 elasticsearch==2.3.0
-requests==2.18.4
+requests
 joblib==0.11
 seaborn==0.7.1
 python-Levenshtein==0.12.0
