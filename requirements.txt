@@ -1,4 +1,4 @@
-numpy==1.11.0
+numpy==1.22.0
 pandas==0.20.3
 elasticsearch==2.3.0
 requests
